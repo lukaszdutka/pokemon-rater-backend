@@ -63,10 +63,12 @@ class PokemonRaterService {
             RatingPair ratingPair = ratingCalculator.calculateNewRatings(firstPokemon.getRating(), secondPokemon.getRating());
             firstPokemon.setRating(ratingPair.winnerRating());
             secondPokemon.setRating(ratingPair.loserRating());
+            System.out.println("Wygrał: " + winnerPokemonId + " => " + firstPokemon.getName());
         } else {
             RatingPair ratingPair = ratingCalculator.calculateNewRatings(secondPokemon.getRating(), firstPokemon.getRating());
             firstPokemon.setRating(ratingPair.loserRating());
             secondPokemon.setRating(ratingPair.winnerRating());
+            System.out.println("Wygrał: " + winnerPokemonId + " => " + secondPokemon.getName());
         }
 
         questionRepository.delete(id);
