@@ -11,6 +11,8 @@ class RandomIdPairGenerator {
         return new PokemonIdPair(id1, id2);
     }
 
+
+
     private int randomId() {
         return random.nextInt(151) + 1; // 1-151
     }
