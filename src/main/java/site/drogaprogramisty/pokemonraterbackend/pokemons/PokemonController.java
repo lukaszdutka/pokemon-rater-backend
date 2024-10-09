@@ -8,7 +8,7 @@ import site.drogaprogramisty.pokemonraterbackend.pokemons.repository.entities.Po
 import java.util.List;
 
 @RestController
-@CrossOrigin("*")
+@CrossOrigin("https://poke.drogaprogramisty.site")
 class PokemonController {
     private final PokemonRaterService pokemonRaterService;
 
