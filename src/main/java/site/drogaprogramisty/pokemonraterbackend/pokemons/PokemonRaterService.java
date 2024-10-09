@@ -1,5 +1,7 @@
 package site.drogaprogramisty.pokemonraterbackend.pokemons;
 
+import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Sort;
 import site.drogaprogramisty.pokemonraterbackend.pokemons.dtos.QuestionResponse;
 import site.drogaprogramisty.pokemonraterbackend.pokemons.repository.PokemonRepository;
 import site.drogaprogramisty.pokemonraterbackend.pokemons.repository.QuestionRepository;
@@ -27,36 +29,41 @@ class PokemonRaterService {
         this.ratingCalculator = ratingCalculator;
     }
 
+    @Transactional
     public QuestionResponse generateQuestion() {
-        UUID uuid = UUID.randomUUID();
         PokemonIdPair pair = randomIdPairGenerator.generate();
 
-        questionRepository.insert(new QuestionEntity(uuid, pair.id(), pair.id2(), LocalDateTime.now()));
+        QuestionEntity question = new QuestionEntity(null, pair.id(), pair.id2(), LocalDateTime.now());
+        questionRepository.save(question);
 
-        String name1 = pokemonRepository.getById(pair.id()).get().getName();
-        String name2 = pokemonRepository.getById(pair.id2()).get().getName();
+        List<PokemonEntity> twoPokemons = pokemonRepository.findAllById(List.of(pair.id(), pair.id2()));
+        if (twoPokemons.size() != 2) {
+            throw new RuntimeException("Bad pokemon ids: " + pair.id() + " or " + pair.id2());
+        }
+        String name1 = twoPokemons.stream()
+                .filter(p -> p.getId() == pair.id()).findFirst().get().getName();
+        String name2 = twoPokemons.stream()
+                .filter(p -> p.getId() == pair.id2()).findFirst().get().getName();
 
-        return new QuestionResponse(uuid.toString(), pair.id(), name1, pair.id2(), name2);
+        return new QuestionResponse(question.getId().toString(), pair.id(), name1, pair.id2(), name2);
     }
 
+    @Transactional
     public void processAnswer(UUID id, int winnerPokemonId) {
-        Optional<QuestionEntity> questionOptional = questionRepository.getById(id);
+        Optional<QuestionEntity> questionOptional = questionRepository.findById(id);
         if (questionOptional.isEmpty()) {
-            throw new RuntimeException("id does not exist: " + id);
+            return;
         }
         QuestionEntity question = questionOptional.get();
 
         if (winnerPokemonId != question.getFirstPokemonId() && winnerPokemonId != question.getSecondPokemonId()) {
-            throw new RuntimeException("I see you sneaky bastard!");
+            return;
         }
 
-        Optional<PokemonEntity> first = pokemonRepository.getById(question.getFirstPokemonId());
-        Optional<PokemonEntity> second = pokemonRepository.getById(question.getSecondPokemonId());
-        if (first.isEmpty() || second.isEmpty()) {
-            throw new RuntimeException("one of ids were invalid: " + question.getFirstPokemonId() + " or " + question.getSecondPokemonId());
-        }
-        PokemonEntity firstPokemon = first.get();
-        PokemonEntity secondPokemon = second.get();
+        PokemonEntity firstPokemon = pokemonRepository.findById(question.getFirstPokemonId())
+                .orElseThrow(() -> new RuntimeException("Invalid pokemon id: " + question.getFirstPokemonId()));
+        PokemonEntity secondPokemon = pokemonRepository.findById(question.getSecondPokemonId())
+                .orElseThrow(() -> new RuntimeException("Invalid pokemon id: " + question.getSecondPokemonId()));
 
 
         if (winnerPokemonId == question.getFirstPokemonId()) {
@@ -71,10 +78,10 @@ class PokemonRaterService {
             System.out.println("Wygrał: " + winnerPokemonId + " => " + secondPokemon.getName());
         }
 
-        questionRepository.delete(id);
+        questionRepository.deleteById(id);
     }
 
     public List<PokemonEntity> getLeaderboard() {
-        return pokemonRepository.getAllSortedByRating();
+        return pokemonRepository.findAll(Sort.by("rating").descending());
     }
 }

@@ -1,13 +1,23 @@
 package site.drogaprogramisty.pokemonraterbackend.pokemons.repository.entities;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Entity
+@Table(name = "questions")
 public class QuestionEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private int firstPokemonId;
     private int secondPokemonId;
     private LocalDateTime creationTime;
+
+    public QuestionEntity() {
+
+    }
 
     public QuestionEntity(UUID id, int firstPokemonId, int secondPokemonId, LocalDateTime creationTime) {
         this.id = id;

@@ -1,9 +1,21 @@
 package site.drogaprogramisty.pokemonraterbackend.pokemons.repository.entities;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "pokemons")
 public class PokemonEntity {
+
+    @Id
     private int id;
     private String name;
     private int rating;
+
+    public PokemonEntity() {
+    }
 
     public PokemonEntity(int id, String name, int rating) {
         this.id = id;
